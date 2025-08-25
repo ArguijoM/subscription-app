@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart'; // Importa tu MainPage
 
 class ResumenCompraScreen extends StatelessWidget {
   final String productName;
@@ -6,6 +7,9 @@ class ResumenCompraScreen extends StatelessWidget {
   final String price;
   final String cardBrand;
   final String cardLast4;
+  final double priceAmount;
+  final String? interval;
+  final int? intervalCount;
 
   const ResumenCompraScreen({
     Key? key,
@@ -13,8 +17,25 @@ class ResumenCompraScreen extends StatelessWidget {
     required this.description,
     required this.price,
     required this.cardBrand,
+    required this.priceAmount,
     required this.cardLast4,
+    this.interval,
+    this.intervalCount,
   }) : super(key: key);
+
+  String getReadableInterval() {
+    if (interval == null || intervalCount == null) return 'Pago único';
+    final map = {
+      'day': 'día',
+      'week': 'semana',
+      'month': 'mes',
+      'year': 'año',
+    };
+    final unidad = map[interval] ?? interval!;
+    return intervalCount == 1
+        ? 'Cada $unidad'
+        : 'Cada $intervalCount ${unidad}s';
+  }
 
   void _mostrarConfirmacionYVolver(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -25,8 +46,17 @@ class ResumenCompraScreen extends StatelessWidget {
     );
 
     Future.delayed(Duration(seconds: 2), () {
-      Navigator.of(context).popUntil((route) => route.isFirst); // Regresa a la pantalla principal
+      // Navega a MainPage y elimina todo el stack
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => MainPage()),
+            (route) => false,
+      );
     });
+  }
+
+  String getFormattedPrice() {
+    return '\$${priceAmount.toStringAsFixed(2)}';
   }
 
   @override
@@ -45,10 +75,13 @@ class ResumenCompraScreen extends StatelessWidget {
             Text(description),
             SizedBox(height: 12),
             Text('Precio:', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(price),
+            Text(getFormattedPrice()),
             SizedBox(height: 24),
             Text('Método de Pago:', style: TextStyle(fontWeight: FontWeight.bold)),
             Text('$cardBrand **** **** **** $cardLast4'),
+            SizedBox(height: 24),
+            Text('Periodo:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(getReadableInterval()),
             SizedBox(height: 36),
             Center(
               child: ElevatedButton(
